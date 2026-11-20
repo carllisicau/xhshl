@@ -4,8 +4,36 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#ebdff5">
+  <meta name="description" content="粉紫色云海里，一封写给 SHL 的信。">
   <title>For SHL</title>
   <style>
+    /* Hallmark · checked: 2026-11-20 · genre: atmospheric · built: the project · redesign: polish · v2.0.0 */
+    /* Hallmark · pre-emit critique: P4 H4 E4 S4 R5 V3 · the familiar centered dedication gains depth through the existing cloud image and the letter reveal */
+    /* Hallmark · finish-review: in-thread · matched tap feedback to the plum button on mobile */
+    :root {
+      color-scheme: light;
+      --ink: #3b2549;
+      --muted-ink: #5c4272;
+      --sky: #ebdff5;
+      --selection: #f2cce8;
+      --button: #563559;
+      --button-hover: #68426a;
+      --button-pressed: #432744;
+      --button-ink: #fff8fc;
+      --tap-highlight: transparent;
+      --paper: #fff5fa;
+      --paper-rule: #cda9c7;
+      --paper-shadow: rgb(82 39 85 / 18%);
+      --sky-light: rgb(255 242 252 / 61%);
+      --touch-light: rgb(255 244 252 / 94%);
+      --mask-ink: #000;
+
+      --font-display: "Cormorant Garamond", Georgia, serif;
+      --font-body: system-ui, "Microsoft YaHei", sans-serif;
+      --font-letter: "Noto Serif SC", "Songti SC", SimSun, serif;
+      --ease-arrive: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
     @font-face {
       font-family: "Cormorant Garamond";
       src: url("./assets/cormorant-normal.woff2") format("woff2");
@@ -22,15 +50,13 @@
       font-display: swap;
     }
 
-    :root {
-      color-scheme: light;
-      --ink: #392849;
-      --violet: #5c4272;
-      --sky: #ebdff5;
-      --serif: "Cormorant Garamond", Georgia, serif;
-      color: var(--ink);
-      background: var(--sky);
-      font-family: system-ui, "Microsoft YaHei", sans-serif;
+    @font-face {
+      font-family: "Noto Serif SC";
+      src: url("./assets/noto-serif-sc-letter.woff2") format("woff2");
+      font-style: normal;
+      font-weight: 500;
+      font-display: swap;
+      unicode-range: U+4F60, U+5929, U+5E0C, U+5F00, U+5FC3, U+671B;
     }
 
     *,
@@ -39,30 +65,39 @@
       box-sizing: border-box;
     }
 
+    html,
+    body {
+      overflow-x: clip;
+    }
+
     body {
       margin: 0;
+      color: var(--ink);
+      background: var(--sky);
+      font-family: var(--font-body);
     }
 
     ::selection {
       color: var(--ink);
-      background: #f2cce8;
+      background: var(--selection);
     }
 
     .scene {
       position: relative;
       isolation: isolate;
       display: grid;
+      grid-template-columns: minmax(0, 1fr);
       justify-items: center;
       align-content: start;
-      min-block-size: max(33rem, 100svh);
-      padding: clamp(4.5rem, 19svh, 12rem) 1.25rem 4rem;
-      overflow: hidden;
-      background: linear-gradient(155deg, #d9c8ef, var(--sky) 45%, #f5cfdf);
+      min-block-size: 100svh;
+      padding: clamp(3.5rem, 18svh, 12rem) 1.25rem clamp(2rem, 7svh, 4rem);
+      overflow: clip;
+      background: var(--sky);
     }
 
     .scene__sky {
       position: absolute;
-      z-index: -2;
+      z-index: -3;
       inset: 0;
       pointer-events: none;
     }
@@ -73,16 +108,26 @@
       block-size: 100%;
       object-fit: cover;
       object-position: center 54%;
-      transform: scale(1.025);
+      transform: scale(1.04);
+    }
+
+    .scene__sky--foreground {
+      z-index: -2;
+      mask-image: linear-gradient(transparent 57%, var(--mask-ink) 86%);
     }
 
     .scene::before {
       position: absolute;
       z-index: -1;
       inset: 0;
-      background: radial-gradient(ellipse at 50% 36%, rgb(255 246 252 / 38%), transparent 66%);
+      background: radial-gradient(ellipse at 50% 37%, var(--sky-light), transparent 68%);
+      opacity: 0.52;
       pointer-events: none;
       content: "";
+    }
+
+    .scene:has(.letter[open])::before {
+      opacity: 0.9;
     }
 
     .scene__glow {
@@ -90,46 +135,46 @@
       z-index: -1;
       inline-size: clamp(8rem, 24vw, 16rem);
       aspect-ratio: 1.4;
-      border-radius: 50%;
       opacity: 0;
-      background: radial-gradient(ellipse, rgb(255 244 252 / 94%), transparent 68%);
+      background: radial-gradient(ellipse, var(--touch-light), transparent 68%);
       pointer-events: none;
     }
 
     .dedication {
-      display: grid;
-      justify-items: center;
+      min-width: 0;
+      max-inline-size: min(100%, 38rem);
       margin: 0;
-      font-family: var(--serif);
-      font-size: clamp(5.25rem, 10vw, 9rem);
-      font-weight: 600;
-      letter-spacing: 0.015em;
-      line-height: 0.78;
+      font-family: var(--font-display);
+      font-size: clamp(5.25rem, 10.4vw, 9rem);
+      font-weight: 550;
+      letter-spacing: 0.012em;
+      line-height: 0.87;
+      overflow-wrap: break-word;
+      text-wrap: balance;
       text-align: center;
     }
 
     .dedication__for {
-      margin: 0 0 0.19em;
-      color: var(--violet);
-      font-size: 0.45em;
-      font-style: italic;
-      font-weight: 500;
-      letter-spacing: -0.035em;
-      line-height: 0.95;
+      display: block;
+      margin-block-end: clamp(0.28rem, 0.65vw, 0.55rem);
+      font-size: clamp(1.8rem, 3.55vw, 3.15rem);
+      letter-spacing: normal;
+      line-height: 1;
     }
 
     .signature {
-      margin: clamp(0.85rem, 2.5svh, 1.3rem) 0 0;
-      color: var(--violet);
-      font-family: var(--serif);
-      font-size: clamp(1.6rem, 3.2vw, 2.05rem);
+      margin: 0.85rem 0 0;
+      color: var(--muted-ink);
+      font-family: var(--font-display);
+      font-size: clamp(1.7rem, 3.2vw, 2.15rem);
       font-style: italic;
-      font-weight: 600;
+      font-weight: 500;
       line-height: 1;
     }
 
     .letter {
-      margin-block-start: clamp(1.5rem, 4svh, 2.4rem);
+      inline-size: min(100%, 20rem);
+      margin-block-start: clamp(1.5rem, 3.5svh, 2rem);
       text-align: center;
     }
 
@@ -137,19 +182,18 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 0.9rem;
-      min-block-size: 2.85rem;
-      padding: 0.65rem 1.25rem;
-      border: 1px solid #856c99;
+      gap: 0.75rem;
+      min-block-size: 3rem;
+      padding: 0.65rem 1.3rem;
+      border: 1px solid var(--button);
       border-radius: 999px;
-      color: var(--ink);
-      background: #faedf8;
-      font-size: 0.875rem;
-      font-weight: 550;
-      letter-spacing: 0.07em;
+      color: var(--button-ink);
+      background: var(--button);
+      font-size: 1rem;
+      font-weight: 600;
       cursor: pointer;
       list-style: none;
-      transition: background-color 180ms ease, border-color 180ms ease;
+      -webkit-tap-highlight-color: var(--tap-highlight);
     }
 
     .letter__toggle::-webkit-details-marker {
@@ -157,25 +201,28 @@
     }
 
     .letter__toggle:focus-visible {
-      outline: 2px solid var(--violet);
+      outline: 2px solid var(--button-pressed);
       outline-offset: 4px;
     }
 
     @media (hover: hover) {
       .letter__toggle:hover {
-        border-color: var(--violet);
-        background: #fff8fd;
+        border-color: var(--button-hover);
+        background: var(--button-hover);
       }
     }
 
+    .letter__toggle:active {
+      border-color: var(--button-pressed);
+      background: var(--button-pressed);
+    }
+
     .letter__caret {
-      inline-size: 0.43rem;
-      block-size: 0.43rem;
-      margin-block-start: -0.2rem;
+      inline-size: 0.44rem;
+      block-size: 0.44rem;
       border-inline-end: 1px solid currentColor;
       border-block-end: 1px solid currentColor;
-      rotate: 45deg;
-      transition: rotate 180ms ease;
+      transform: translateY(-0.12rem) rotate(45deg);
     }
 
     .letter__collapse,
@@ -188,55 +235,77 @@
     }
 
     .letter[open] .letter__caret {
-      margin-block-start: 0.2rem;
-      rotate: 225deg;
+      transform: translateY(0.12rem) rotate(225deg);
     }
 
     .letter__body {
-      max-inline-size: 25ch;
-      margin: 1.15rem auto 0;
+      margin: 0.9rem 0 0;
+      padding: 1.05rem clamp(0.85rem, 4vw, 1.7rem) 1.4rem;
+      border-radius: 0.2rem;
       color: var(--ink);
-      font-family: "Songti SC", "Noto Serif SC", SimSun, serif;
-      font-size: clamp(1rem, 2vw, 1.12rem);
-      letter-spacing: 0.06em;
-      line-height: 1.85;
+      background: var(--paper);
+      box-shadow: 0 0.8rem 1.8rem var(--paper-shadow);
+      font-family: var(--font-letter);
+      font-size: clamp(1.125rem, 2vw, 1.25rem);
+      font-weight: 500;
+      line-height: 1.9;
       text-wrap: balance;
+    }
+
+    .letter__body::before {
+      display: block;
+      inline-size: 2rem;
+      block-size: 1px;
+      margin: 0.1rem auto 0.65rem;
+      background: var(--paper-rule);
+      content: "";
     }
 
     @media (max-width: 700px) {
       .scene__sky img {
         object-position: center 60%;
       }
-
-      .dedication {
-        letter-spacing: 0;
-      }
     }
 
     @media (prefers-reduced-motion: no-preference) {
       .scene__sky img {
-        animation: drift-in 4.4s cubic-bezier(0.16, 1, 0.3, 1);
+        animation: sky-arrive 4.4s var(--ease-arrive);
+      }
+
+      .scene__sky--foreground img {
+        animation-name: clouds-arrive;
+      }
+
+      .scene::before {
+        transition: opacity 400ms var(--ease-arrive);
+      }
+
+      .letter__toggle {
+        transition: background-color 170ms ease, border-color 170ms ease;
+      }
+
+      .letter__caret {
+        transition: transform 270ms var(--ease-arrive);
       }
 
       .letter__body {
-        animation: unfold 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+        transform-origin: center top;
+        animation: unfold 450ms var(--ease-arrive) both;
       }
 
-      @keyframes drift-in {
-        from { transform: translate3d(0.45%, 0.75%, 0) scale(1.065); }
-        to { transform: scale(1.025); }
+      @keyframes sky-arrive {
+        from { transform: translate(0.5%, -0.6%) scale(1.075); }
+        to { transform: scale(1.04); }
+      }
+
+      @keyframes clouds-arrive {
+        from { transform: translate(-1.6%, 1.45%) scale(1.1); }
+        to { transform: scale(1.04); }
       }
 
       @keyframes unfold {
-        from { opacity: 0; transform: translateY(0.35rem); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .letter__toggle,
-      .letter__caret {
-        transition: none;
+        from { opacity: 0; transform: translateY(-0.4rem) scale(0.97); }
+        to { opacity: 1; transform: none; }
       }
     }
   </style>
@@ -245,7 +314,12 @@
   <main class="scene">
     <picture class="scene__sky" aria-hidden="true">
       <source media="(max-width: 800px) and (max-aspect-ratio: 1/1)" srcset="./assets/dawn-clouds-portrait.webp">
-      <img src="./assets/dawn-clouds.webp" alt="" fetchpriority="high">
+      <img src="./assets/dawn-clouds.webp" width="1536" height="1024" alt="" fetchpriority="high">
+    </picture>
+    <!-- Both layers share a crop so they align once the clouds settle. -->
+    <picture class="scene__sky scene__sky--foreground" aria-hidden="true">
+      <source media="(max-width: 800px) and (max-aspect-ratio: 1/1)" srcset="./assets/dawn-clouds-portrait.webp">
+      <img src="./assets/dawn-clouds.webp" width="1536" height="1024" alt="">
     </picture>
     <h1 class="dedication" lang="en"><span class="dedication__for">For</span> SHL</h1>
     <p class="signature" lang="en">always</p>
@@ -255,7 +329,7 @@
         <span class="letter__collapse">合上信笺</span>
         <span class="letter__caret" aria-hidden="true"></span>
       </summary>
-      <p class="letter__body">有一份心意，<br>从这一刻，到很久以后。</p>
+      <p class="letter__body">希望你天天开心</p>
     </details>
     <span class="scene__glow" aria-hidden="true"></span>
   </main>
@@ -280,6 +354,10 @@
         { opacity: 0.66, offset: 0.2 },
         { transform: "translate(-50%, -56%) scale(1.45)", opacity: 0 }
       ], { duration: 880, easing: "ease-out" });
+    });
+
+    reducedMotion.addEventListener("change", (event) => {
+      if (event.matches) activeGlow?.cancel();
     });
   </script>
 </body>
