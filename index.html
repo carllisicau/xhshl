@@ -325,21 +325,23 @@
 
       .scene__heart {
         animation: heart-rise var(--heart-duration) linear var(--heart-delay) both,
-          heart-wander var(--heart-duration) ease-in-out var(--heart-delay) both,
           heart-appear 180ms var(--ease-arrive) var(--heart-delay) both;
+      }
+
+      .scene__heart::before {
+        --heart-color-period: 5.2s;
+        animation: heart-color-cycle var(--heart-color-period) linear
+          calc(var(--heart-delay) - var(--heart-color-period) * var(--heart-color-phase)) infinite;
+      }
+
+      @keyframes heart-color-cycle {
+        from { filter: hue-rotate(0deg); }
+        to { filter: hue-rotate(360deg); }
       }
 
       @keyframes heart-rise {
         from { transform: translateY(0); }
         to { transform: translateY(var(--heart-rise)); }
-      }
-
-      @keyframes heart-wander {
-        0% { translate: -50% -50%; }
-        25% { translate: calc(-50% + var(--heart-drift-25)) -50%; }
-        50% { translate: calc(-50% + var(--heart-drift-50)) -50%; }
-        75% { translate: calc(-50% + var(--heart-drift-75)) -50%; }
-        100% { translate: calc(-50% + var(--heart-drift-100)) -50%; }
       }
 
       @keyframes heart-appear {
@@ -397,40 +399,61 @@
     const heartSizes = [0.9, 0.54, 0.38];
     let activeGlow;
 
+    function heartDriftKeyframes(x, travel, duration, launchDirection) {
+      const spread = Math.min(144, window.innerWidth * 0.32, travel * 0.33);
+      const amplitude = spread * (0.72 + Math.random() * 0.28);
+      const leftDrift = Math.min(amplitude, Math.max(0, x - 28));
+      const rightDrift = Math.min(amplitude, Math.max(0, window.innerWidth - x - 28));
+
+      function waypoint(offset, lean) {
+        const distance = lean < 0 ? leftDrift : rightDrift;
+        const shift = Math.round(distance * lean);
+        return { offset, translate: "calc(-50% + " + shift + "px) -50%", easing: "ease-in-out" };
+      }
+
+      // Fan out early, then give each heart its own turns and timing.
+      const firstTurn = Math.min(0.32, (900 + Math.random() * 520) / duration);
+      const firstLean = launchDirection * 0.7 + (Math.random() - 0.5) * 0.4;
+      const frames = [waypoint(0, 0), waypoint(firstTurn, firstLean)];
+      const turns = Math.min(6, 3 + Math.floor(travel / 260) + Math.floor(Math.random() * 2));
+      for (let turn = 1; turn < turns; turn++) {
+        const progress = (turn + (Math.random() - 0.5) * 0.72) / turns;
+        frames.push(waypoint(firstTurn + (1 - firstTurn) * progress, Math.random() * 2 - 1));
+      }
+      frames.push(waypoint(1, Math.random() * 2 - 1));
+      return frames;
+    }
+
     function showHeartTrail(x, y) {
       // Keep the current hearts in flight even when taps briefly fill the sky.
       if (hearts.childElementCount + heartSizes.length > maxActiveHearts) return;
 
       // Start at the pointer and clear a full sprite above the viewport edge.
       const travel = y + 36;
-      const drift = Math.min(60, travel * 0.28);
-      // Leave room for the hearts near a screen edge so they drift inward.
-      const leftDrift = Math.min(drift, Math.max(0, x - 28));
-      const rightDrift = Math.min(drift, Math.max(0, window.innerWidth - x - 28));
+      const direction = Math.random() < 0.5 ? -1 : 1;
+      const launchDirections = [direction, -direction, 0];
 
-      const trail = document.createDocumentFragment();
       heartSizes.forEach((size, index) => {
+        const speed = 70 - index * 3 + Math.random() * 8;
+        const duration = Math.round(Math.max(680, travel / speed * 1000));
+        const delay = index * (150 + Math.round(Math.random() * 64));
         const heart = document.createElement("span");
         heart.className = "scene__heart";
         heart.style.left = x + "px";
         heart.style.top = y + "px";
-        heart.style.setProperty("--heart-delay", index * 165 + "ms");
+        heart.style.setProperty("--heart-delay", delay + "ms");
         heart.style.setProperty("--heart-size", size);
-        // Randomize sideways waypoints independently of the steady climb.
-        for (const step of [25, 50, 75, 100]) {
-          const offset = Math.round(Math.random() * (leftDrift + rightDrift) - leftDrift);
-          heart.style.setProperty("--heart-drift-" + step, offset + "px");
-        }
         heart.style.setProperty("--heart-rise", -travel + "px");
-        const speed = 118 - index * 4 + Math.random() * 12;
-        const duration = Math.max(520, travel / speed * 1000);
         heart.style.setProperty("--heart-duration", duration + "ms");
+        heart.style.setProperty("--heart-color-phase", Math.random());
         heart.addEventListener("animationend", (event) => {
           if (event.animationName === "heart-rise") heart.remove();
         });
-        trail.append(heart);
+        hearts.append(heart);
+        heart.animate(heartDriftKeyframes(x, travel, duration, launchDirections[index]), {
+          duration, delay, fill: "both"
+        });
       });
-      hearts.append(trail);
     }
 
     scene.addEventListener("click", (event) => {
@@ -456,6 +479,7 @@
     reducedMotion.addEventListener("change", (event) => {
       if (event.matches) {
         activeGlow?.cancel();
+        hearts.getAnimations({ subtree: true }).forEach((animation) => animation.cancel());
         hearts.replaceChildren();
       }
     });
