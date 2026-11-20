@@ -26,6 +26,9 @@
       --paper-shadow: rgb(82 39 85 / 18%);
       --sky-light: rgb(255 242 252 / 61%);
       --touch-light: rgb(255 244 252 / 94%);
+      --heart-rainbow: #fa679e 12%, #ffad75 28%, #ffe78c 41%, #8be3bc 54%, #7bdcf1 67%, #6c9bed 84%;
+      --heart-shadow: rgb(100 48 116 / 28%);
+      --heart-reflection: rgb(255 255 255 / 80%);
       --mask-ink: #000;
 
       --font-display: "Cormorant Garamond", Georgia, serif;
@@ -138,6 +141,33 @@
       opacity: 0;
       background: radial-gradient(ellipse, var(--touch-light), transparent 68%);
       pointer-events: none;
+    }
+
+    .scene__hearts {
+      position: fixed;
+      z-index: 0;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .scene__heart {
+      position: absolute;
+      inline-size: 48px;
+      block-size: 48px;
+      translate: -50% -50%;
+      opacity: 0;
+      pointer-events: none;
+      filter: drop-shadow(0 3px 5px var(--heart-shadow));
+    }
+
+    .scene__heart::before {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 43% 37% at 28% 24%, var(--heart-reflection), transparent 75%),
+        linear-gradient(135deg, var(--heart-rainbow));
+      transform: scale(var(--heart-size));
+      clip-path: path("M24 43 C19 39 5 30 3 20 C1 13 5 7 11 6 C17 5 21 8 24 13 C27 8 31 5 37 6 C43 7 47 13 45 20 C43 30 29 39 24 43 Z");
+      content: "";
     }
 
     .dedication {
@@ -293,6 +323,30 @@
         animation: unfold 450ms var(--ease-arrive) both;
       }
 
+      .scene__heart {
+        animation: heart-rise var(--heart-duration) linear var(--heart-delay) both,
+          heart-wander var(--heart-duration) ease-in-out var(--heart-delay) both,
+          heart-appear 180ms var(--ease-arrive) var(--heart-delay) both;
+      }
+
+      @keyframes heart-rise {
+        from { transform: translateY(0); }
+        to { transform: translateY(var(--heart-rise)); }
+      }
+
+      @keyframes heart-wander {
+        0% { translate: -50% -50%; }
+        25% { translate: calc(-50% + var(--heart-drift-25)) -50%; }
+        50% { translate: calc(-50% + var(--heart-drift-50)) -50%; }
+        75% { translate: calc(-50% + var(--heart-drift-75)) -50%; }
+        100% { translate: calc(-50% + var(--heart-drift-100)) -50%; }
+      }
+
+      @keyframes heart-appear {
+        from { opacity: 0; scale: 0.42; }
+        to { opacity: 1; scale: 1; }
+      }
+
       @keyframes sky-arrive {
         from { transform: translate(0.5%, -0.6%) scale(1.075); }
         to { transform: scale(1.04); }
@@ -332,12 +386,52 @@
       <p class="letter__body">希望你天天开心</p>
     </details>
     <span class="scene__glow" aria-hidden="true"></span>
+    <div class="scene__hearts" aria-hidden="true"></div>
   </main>
   <script>
     const scene = document.querySelector(".scene");
     const glow = document.querySelector(".scene__glow");
+    const hearts = document.querySelector(".scene__hearts");
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const maxActiveHearts = 15;
+    const heartSizes = [0.9, 0.54, 0.38];
     let activeGlow;
+
+    function showHeartTrail(x, y) {
+      // Keep the current hearts in flight even when taps briefly fill the sky.
+      if (hearts.childElementCount + heartSizes.length > maxActiveHearts) return;
+
+      // Start at the pointer and clear a full sprite above the viewport edge.
+      const travel = y + 36;
+      const drift = Math.min(60, travel * 0.28);
+      // Leave room for the hearts near a screen edge so they drift inward.
+      const leftDrift = Math.min(drift, Math.max(0, x - 28));
+      const rightDrift = Math.min(drift, Math.max(0, window.innerWidth - x - 28));
+
+      const trail = document.createDocumentFragment();
+      heartSizes.forEach((size, index) => {
+        const heart = document.createElement("span");
+        heart.className = "scene__heart";
+        heart.style.left = x + "px";
+        heart.style.top = y + "px";
+        heart.style.setProperty("--heart-delay", index * 165 + "ms");
+        heart.style.setProperty("--heart-size", size);
+        // Randomize sideways waypoints independently of the steady climb.
+        for (const step of [25, 50, 75, 100]) {
+          const offset = Math.round(Math.random() * (leftDrift + rightDrift) - leftDrift);
+          heart.style.setProperty("--heart-drift-" + step, offset + "px");
+        }
+        heart.style.setProperty("--heart-rise", -travel + "px");
+        const speed = 118 - index * 4 + Math.random() * 12;
+        const duration = Math.max(520, travel / speed * 1000);
+        heart.style.setProperty("--heart-duration", duration + "ms");
+        heart.addEventListener("animationend", (event) => {
+          if (event.animationName === "heart-rise") heart.remove();
+        });
+        trail.append(heart);
+      });
+      hearts.append(trail);
+    }
 
     scene.addEventListener("click", (event) => {
       if (reducedMotion.matches || event.detail === 0 || event.target.closest(".letter")) {
@@ -347,8 +441,11 @@
       // Reuse the glow so repeated taps stay as light as a single one.
       activeGlow?.cancel();
       const bounds = scene.getBoundingClientRect();
-      glow.style.left = (event.clientX - bounds.left) + "px";
-      glow.style.top = (event.clientY - bounds.top) + "px";
+      const x = event.clientX - bounds.left;
+      const y = event.clientY - bounds.top;
+      glow.style.left = x + "px";
+      glow.style.top = y + "px";
+      showHeartTrail(event.clientX, event.clientY);
       activeGlow = glow.animate([
         { transform: "translate(-50%, -50%) scale(0.25)", opacity: 0 },
         { opacity: 0.66, offset: 0.2 },
@@ -357,7 +454,10 @@
     });
 
     reducedMotion.addEventListener("change", (event) => {
-      if (event.matches) activeGlow?.cancel();
+      if (event.matches) {
+        activeGlow?.cancel();
+        hearts.replaceChildren();
+      }
     });
   </script>
 </body>
